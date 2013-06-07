@@ -11,51 +11,45 @@
 
     var Notify = function() {
 
+        var intervalId = null;
+
         this.status = null;
+        this.interval = 1000 * 10;
 
         this.autorizar = function () {
             var notifier = this;
 
             if (window.webkitNotifications && window.webkitNotifications.checkPermission() == 0) {
-                notifier.searchUserTwitter();
+                notifier.start();
             }
 
             window.Notification.requestPermission(function(perm) {
                 notifier.status = perm;
-                notifier.searchUserTwitter();
+                notifier.start();
                 console.log(perm);
             });
         }
 
-        this.searchUserTwitter = function () {
-            var notifier = this,
-                user = document.querySelector("#login");
-                console.log(user.value);
+        this.notificar = function (mensagem) {
+            var notification = new Notification("To testando", {
+                dir: "auto",
+                lang: "",
+                icon: "http://vomitandoarcoiris.com.br/wp-content/uploads/2013/03/icon-vomitando-arco-iris1.jpg",
+                Duration: 10,
+                body: mensagem,
+                tag: "sometag",
+            });
 
-                jQuery.ajax({
-                    data: {
-                        suppress_response_codes: true
-                    },
-                  dataType: 'jsonp',
-                  url: 'http://api.twitter.com/1/statuses/user_timeline.json?include_entities=true&include_rts=true&screen_name='+user.value+'&count=2',
-                  contentType:"application/json",
-                  complete: function(xhr, textStatus) {
-                    //called when complete
-                  },
-                  success: function(data, textStatus, xhr) {
-                        console.log(data);
-                    for (i=0; i<data.length; i++) {
-                        console.log(data[i]);
-                        $("#data").append("<p>" + data[i].text) +"</p>";
-                        $("#data").append("<p>" + data[i].created_at +"</p>");
-                    };
-                    $("#data").append(data.text);
-                  },
-                  error: function(xhr, textStatus, errorThrown) {
-                        alert('erro');
-                    },
-                });
-        }
+            notification.onclick = function () {
+                alert('calma zé');
+            };
+
+            notification.onshow = function () {
+                setTimeout(function () {
+                    notification.close();
+                }, 10000);
+            };
+        };
 
         this.addEvents = function () {
             var notifier = this;
@@ -63,7 +57,38 @@
             document.querySelector("#go").addEventListener('click', function () {
                 notifier.autorizar();
             });
+            document.querySelector("#stop").addEventListener('click', function () {
+                notifier.stop();
+            });
         }
+
+        this.isAuth = function () {
+            return this.status === 'granted' ||
+                                Notification.permission === 'granted' ||
+                                window.webkitNotifications.checkPermission() === 0;
+        }
+
+        this.stop = function () {
+            var statusElem = document.querySelector("#statusvalue");
+
+            window.clearInterval(intervalId);
+            statusElem.setAttribute('class', 'stopped');
+            statusElem.innerHTML = 'Sem notificar :(';
+        }
+        this.start = function () {
+            var notifier = this,
+                statusElem = document.querySelector("#statusvalue");
+
+                if (this.isAuth()){
+                    intervalId = window.setInterval(function () {
+                        // Inicia
+                        var mensagem = "TO AQUI HEIN ;P";
+                        notifier.notificar(mensagem);
+                    }, notifier.interval);
+                    statusElem.setAttribute('class', 'started');
+                    statusElem.innerHTML = 'Notificação ativa :)';
+                }
+        };
 
         this.init = function () {
             this.addEvents();
