@@ -10,31 +10,30 @@
 
 
     var Notify = function() {
-
-        var intervalId = null;
-
+        var intervalId = null,
+            listaTwitts = [];
         this.status = null;
         this.interval = 1000 * 10;
 
         this.autorizar = function () {
             var notifier = this;
 
-            if (window.webkitNotifications && window.webkitNotifications.checkPermission() == 0) {
-                notifier.start();
-            }
+            // if (window.webkitNotifications && window.webkitNotifications.checkPermission() == 0) {
+            //     notifier.start();
+            //     console.log('1');
+            // }
 
             window.Notification.requestPermission(function(perm) {
                 notifier.status = perm;
                 notifier.start();
-                console.log(perm);
             });
         }
 
-        this.notificar = function (mensagem) {
-            var notification = new Notification("To testando", {
+        this.notificar = function (profile, icon, mensagem) {
+            var notification = new Notification(profile, {
                 dir: "auto",
                 lang: "",
-                icon: "http://vomitandoarcoiris.com.br/wp-content/uploads/2013/03/icon-vomitando-arco-iris1.jpg",
+                icon: icon,
                 Duration: 10,
                 body: mensagem,
                 tag: "sometag",
@@ -50,6 +49,55 @@
                 }, 10000);
             };
         };
+
+        this.tweets = function () {
+            var test, msg, item, icon, user, i, max,
+                notifier = this;
+
+            $.ajax({
+              dataType: 'json',
+              url: 'index.php',
+              contentType:"application/json",
+              async: false,
+              complete: function(xhr, textStatus) {
+                //called when complete
+              },
+              success: function(data, textStatus, xhr) {
+                    if (data.error) {
+                        notifier.stop();
+                        $('p').html('<strong>Xiiii marquinho deu erro ai na parada....</strong> <br />'+data.error);
+                        return false;
+                    }else{
+                        max = data.length;
+                        for (i = 0; i < max; i++) {
+                            item =  {
+                                msg: data[i].text,
+                                icon: data[i].user.profile_image_url,
+                                user: data[i].user.name
+                            }
+                            listaTwitts.push(item);
+                        };
+                    };
+                },
+              error: function(xhr, textStatus, errorThrown) {
+                    alert('erro');
+                },
+            });
+
+            if (listaTwitts === ''){
+                return false;
+            }else{
+                return listaTwitts;
+            };
+        };
+
+        this.getTwitter = function (){
+            // var notifier = this;
+            // console.log(notifier.tweets);
+            //console.log(list);
+            //
+            console.log(listaTwitts.length);
+        }
 
         this.addEvents = function () {
             var notifier = this;
@@ -69,30 +117,35 @@
         }
 
         this.stop = function () {
-            var statusElem = document.querySelector("#statusvalue");
-
+            var notifier = this,
+                statusElem = document.querySelector("#statusvalue");
+            console.log('entrou');
             window.clearInterval(intervalId);
             statusElem.setAttribute('class', 'stopped');
             statusElem.innerHTML = 'Sem notificar :(';
         }
+
         this.start = function () {
             var notifier = this,
                 statusElem = document.querySelector("#statusvalue");
-
-                if (this.isAuth()){
-                    intervalId = window.setInterval(function () {
-                        // Inicia
-                        var mensagem = "TO AQUI HEIN ;P";
-                        notifier.notificar(mensagem);
-                    }, notifier.interval);
-                    statusElem.setAttribute('class', 'started');
-                    statusElem.innerHTML = 'Notificação ativa :)';
-                }
+                notifier.tweets();
+                notifier.getTwitter();
+                // if (this.isAuth()){
+                //     intervalId = window.setInterval(function () {
+                //         // Inicia
+                //         var msgTwitt = notifier.tweets();
+                //         console.log(msgTwitt);
+                //         //notifier.notificar(msgTwitt[0].icon, msgTwitt[0].msg);
+                //     }, notifier.interval);
+                //     statusElem.setAttribute('class', 'started');
+                //     statusElem.innerHTML = 'Notificação ativa :)';
+                // }
         };
 
         this.init = function () {
             this.addEvents();
-            this.autorizar();
+            //this.autorizar();
+            //this.tweets();
         }
     };
 
@@ -101,8 +154,3 @@
 
 
 }(jQuery));
-
-
-
-
-//https://api.twitter.com/1/statuses/user_timeline.json?include_entities=true&include_rts=true&screen_name=lf_guerreiro&count=4
