@@ -11,7 +11,7 @@
 
     var Notify = function() {
         var intervalId = null,
-            listaTwitts = [];
+            listaTwitts    = [];
         this.status = null;
         this.interval = 1000 * 10;
 
@@ -51,7 +51,7 @@
         };
 
         this.tweets = function () {
-            var test, msg, item, icon, user, i, max,
+            var test, msg, item, icon, user, i, max, idTweet,
                 notifier = this;
 
             $.ajax({
@@ -71,6 +71,7 @@
                         max = data.length;
                         for (i = 0; i < max; i++) {
                             item =  {
+                                idTweet: data[i].id,
                                 msg: data[i].text,
                                 icon: data[i].user.profile_image_url,
                                 user: data[i].user.name
@@ -93,10 +94,13 @@
 
         this.getTwitter = function (){
             // var notifier = this;
-            // console.log(notifier.tweets);
-            //console.log(list);
-            //
-            console.log(listaTwitts.length);
+            var i, listId, test;
+
+            for (i in listaTwitts) {
+                if (listaTwitts.hasOwnProperty(i)) {
+                    console.log(listaTwitts[i].idTweet)
+                  }
+            };
         }
 
         this.addEvents = function () {
